@@ -21,17 +21,20 @@ class LRUCache (object):
     """Append `to_insert` to MRU side"""
     if to_insert in self.items:
       return
+    lru_del_item = None
     if self.items and len(self.items) == self.max_len:
       lru_del_item = self.doubly_ll.popleft()
       self.items.remove(lru_del_item)
     self.doubly_ll.append(to_insert)
     self.items.add(to_insert)
+    return lru_del_item
 
   def delete (self, to_del):
     if not self.items or to_del not in self.items:
       return
     self.doubly_ll.remove(to_del)
     self.items.remove(to_del)
+    return to_del
 
   def update (self, to_update):
     """Move `to_update` to MRU side"""
@@ -65,9 +68,12 @@ def test_LRUCache ():
 
   # test size 2 cache
   lru = LRUCache(2)
-  lru.insert(1)
-  lru.insert(2)
-  lru.insert(3)
+  res1 = lru.insert(1)
+  res2 = lru.insert(2)
+  res3 = lru.insert(3)
+  assert not res1
+  assert not res2
+  assert res3
   assert lru.items == {2, 3}
   assert list(lru.doubly_ll) == [2, 3]
   lru.update(2)

@@ -41,7 +41,7 @@ class Router (object):
     self.arp_cache = {}
     self.message_queue = defaultdict(list)
     self.ip = ip
-    self.cc = LRUCache(8)
+    self.cc = LRUCache(1)
     self.rt = routing_table
     self.crt = defaultdict(list)  # content name: rcvd to port
     self.local_host = local_host
@@ -272,9 +272,10 @@ class NDNRouting (object):
           self.send_packet(content_pkt.pack(), out_port)
     elif type == CP_RESP:
       if content in self.router[dpid].local_host_crt:
-        # update cc
-        self.router[dpid].cc.insert(content)
-        # update content_locs
+        # update cc and content_locs
+        del_content = self.router[dpid].cc.insert(content)
+        if del_content:
+          self.content_locs[del_content].remove(self.router[dpid].name)
         self.content_locs[content].add(self.router[dpid].name)
         # send response to local host
         _, out_port, local_host_ip, _ = self.router[dpid].rt(
@@ -305,9 +306,10 @@ class NDNRouting (object):
 
   def process_crt(self, dpid, content):
     if content in self.router[dpid].crt:
-      # update cc
-      self.router[dpid].cc.insert(content)
-      # update content_locs
+      # update cc and content_locs
+      del_content = self.router[dpid].cc.insert(content)
+      if del_content:
+        self.content_locs[del_content].remove(self.router[dpid].name)
       self.content_locs[content].add(self.router[dpid].name)
       for to_snd_port in self.router[dpid].crt[content]:
         # send response to preceding router
