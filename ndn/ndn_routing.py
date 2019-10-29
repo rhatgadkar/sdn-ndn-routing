@@ -9,6 +9,8 @@ from pox.lib.packet.ipv4 import ipv4
 from pox.lib.packet.udp import udp
 import pox.openflow.libopenflow_01 as of
 
+from lru_cache import LRUCache
+
 CP_RESP = "response"
 CP_REQ = "request"
 ROUTER_RESP_UDP_PORT = 4950
@@ -39,7 +41,7 @@ class Router (object):
     self.arp_cache = {}
     self.message_queue = defaultdict(list)
     self.ip = ip
-    self.cc = {}  # content name: content  TODO make it an LRU with size
+    self.cc = LRUCache(8)
     self.rt = routing_table
     self.crt = defaultdict(list)  # content name: rcvd to port
     self.local_host = local_host
@@ -212,7 +214,7 @@ class NDNRouting (object):
     else:
       # request coming from client process of host
       # 1. check if CC contains content. If it does not, invoke RT.
-      if content in self.router[dpid].cc:
+      if self.router[dpid].cc.exists(content):
         udp_resp = self.get_udp_resp(
           src_port=ROUTER_RESP_UDP_PORT, dst_port=udpp.srcport,
           src_ip=self.router[dpid].ip,
@@ -238,7 +240,7 @@ class NDNRouting (object):
     type, content = packet.payload.split(",")
     if type == CP_REQ:
       # 1. check if CC contains content. If it does not, invoke RT.
-      if content in self.router[dpid].cc:
+      if self.router[dpid].cc.exists(content):
         content_pkt = self.get_content_pkt(
           type=CP_RESP, content=content,
           src_mac=self.port_to_mac(packet_in.in_port),
@@ -271,7 +273,7 @@ class NDNRouting (object):
     elif type == CP_RESP:
       if content in self.router[dpid].local_host_crt:
         # update cc
-        self.router[dpid].cc[content] = content
+        self.router[dpid].cc.insert(content)
         # update content_locs
         self.content_locs[content].add(self.router[dpid].name)
         # send response to local host
@@ -304,7 +306,7 @@ class NDNRouting (object):
   def process_crt(self, dpid, content):
     if content in self.router[dpid].crt:
       # update cc
-      self.router[dpid].cc[content] = content
+      self.router[dpid].cc.insert(content)
       # update content_locs
       self.content_locs[content].add(self.router[dpid].name)
       for to_snd_port in self.router[dpid].crt[content]:
