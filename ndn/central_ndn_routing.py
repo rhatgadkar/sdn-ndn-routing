@@ -24,10 +24,6 @@ Shortest path routing.
 2. check if neighboring routers (1 hop) contain content.
 3. if neighbors don't contain content, check 2 hops away for content
 4. if routers don't contain content, check hosts
-
-NDN 2:
-1. if don't know how to route, send broadcast.
-2. receive periodic advertisements from neighboring routers to know how to route.
 """
 
 
@@ -48,7 +44,7 @@ class Router (object):
     self.local_host_crt = {}  # content name: local hosts's UDP src port
 
 
-class NDNRouting (object):
+class CentralNDNRouting (object):
   """
   Performs routing to retrieve a content from a network, assuming a centralized
   controller.
@@ -428,5 +424,5 @@ def launch ():
   """
   def start_switch (event):
     log.debug("Controlling %s" % (event.connection,))
-    NDNRouting(event.connection)
+    CentralNDNRouting(event.connection)
   core.openflow.addListenerByName("ConnectionUp", start_switch)
