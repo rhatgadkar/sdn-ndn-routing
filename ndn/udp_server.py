@@ -26,11 +26,15 @@ server_address = (serving_contents[2], serving_contents[3])
 print "starting up on %s port %s" % server_address
 sock.bind(server_address)
 
+num_requests = 0
 while True:
     print "\nwaiting to receive message"
     data, address = sock.recvfrom(4096)
     
-    print "received %s bytes from %s" % (len(data), address)
+    num_requests += 1
+    print "Request %d: received %s bytes from %s" % (
+      num_requests, len(data), address
+    )
     print data
     
     if data in serving_contents[:2]:
