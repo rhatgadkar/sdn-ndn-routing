@@ -80,7 +80,13 @@ class CentralNDNRouting (object):
       "content4_1": "h4",
       "content4_2": "h4",
     }
-    self.hops = {
+    self.host_hops = {
+      "r1": ((), ("h1",), ("h2", "h4"), ("h3",)),
+      "r2": ((), ("h2",), ("h1", "h3"), ("h4",)),
+      "r3": ((), ("h3",), ("h2", "h4"), ("h1",)),
+      "r4": ((), ("h4",), ("h1", "h3"), ("h2")),
+    }
+    self.router_hops = {
       "r1": ((), ("r2", "r4"), ("r3",)),
       "r2": ((), ("r1", "r3"), ("r4",)),
       "r3": ((), ("r2", "r4"), ("r1",)),
@@ -331,21 +337,35 @@ class CentralNDNRouting (object):
       self.send_packet(arp_request.pack(), out_port)
 
   def get_content_loc (self, dpid, content):
+    _, _, host_hop2, _ = self.host_hops[self.router[dpid].name]
+    _, router_hop1, router_hop2 = self.router_hops[self.router[dpid].name]
+    # 1. check if local host contains content
+    if self.content_hosts[content] == self.router[dpid].local_host:
+      dst = self.router[dpid].local_host
     # 2. check if neighboring routers (1 hop) contain content.
-    _, hop1, hop2 = self.hops[self.router[dpid].name]
-    if (
-      hop1[0] in self.content_locs[content] and
-      hop1[1] in self.content_locs[content]
+    elif (
+      router_hop1[0] in self.content_locs[content] and
+      router_hop1[1] in self.content_locs[content]
     ):
-      dst = random.choice((hop1[0], hop1[1]))
-    elif hop1[0] in self.content_locs[content]:
-      dst = hop1[0]
-    elif hop1[1] in self.content_locs[content]:
-      dst = hop1[1]
-    # 3. if neighbors don't contain content, check 2 hops away for content
-    elif hop2[0] in self.content_locs[content]:
-      dst = hop2[0]
-    # 4. if routers don't contain content, check hosts
+      dst = random.choice((router_hop1[0], router_hop1[1]))
+    elif router_hop1[0] in self.content_locs[content]:
+      dst = router_hop1[0]
+    elif router_hop1[1] in self.content_locs[content]:
+      dst = router_hop1[1]
+    # 3. check hosts 2 hops away for content
+    elif (
+      host_hop2[0] in self.content_locs[content] and
+      host_hop2[1] in self.content_locs[content]
+    ):
+      dst = random.choice((host_hop2[0], host_hop2[1]))
+    elif host_hop2[0] in self.content_locs[content]:
+      dst = host_hop2[0]
+    elif host_hop2[1] in self.content_locs[content]:
+      dst = host_hop2[1]
+    # 4. check router 2 hops away for content
+    elif router_hop2[0] in self.content_locs[content]:
+      dst = router_hop2[0]
+    # 5. the last host (3 hops away) will contain the content
     else:
       dst = self.content_hosts[content]
     rt_res = self.router[dpid].rt(dst)
