@@ -36,17 +36,19 @@ for host_num in contents.keys():
             contents[host_num][2], contents[host_num][3]
         )
 
-start_time = time.time()
 server_address = local_routers[args.host_num]
 server_ip = server_address[0]
-while sum(content_counts.values()) < 600:
+num_requests = 0
+start_time = time.time()
+while contents_to_get:
     content_to_get = random.choice(contents_to_get.keys())
 
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         # Send data
-        print "\nRequest %s" % str(sum(content_counts.values()) + 1)
+        num_requests += 1
+        print "\nRequest %d" % num_requests
         print "requesting \"%s\" from %s" % (content_to_get, server_ip)
         sent = sock.sendto(content_to_get, server_address)
 
@@ -54,7 +56,7 @@ while sum(content_counts.values()) < 600:
         data, server = sock.recvfrom(4096)
         print "received \"%s\" from %s" % (data, server_ip)
         content_counts[content_to_get] += 1
-        if content_counts[content_to_get] == 600:
+        if content_counts[content_to_get] == 100:
             del contents_to_get[content_to_get]
     finally:
         sock.close()
