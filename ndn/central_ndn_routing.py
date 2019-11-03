@@ -11,6 +11,7 @@ import pox.openflow.libopenflow_01 as of
 
 from lru_cache import LRUCache
 
+CC_SIZE = 8
 CP_RESP = "response"
 CP_REQ = "request"
 ROUTER_RESP_UDP_PORT = 4950
@@ -37,7 +38,7 @@ class Router (object):
     self.arp_cache = {}
     self.message_queue = defaultdict(list)
     self.ip = ip
-    self.cc = LRUCache(1)
+    self.cc = LRUCache(CC_SIZE)
     self.rt = routing_table
     self.crt = defaultdict(list)  # content name: rcvd to port
     self.local_host = local_host
