@@ -1,0 +1,11 @@
+--- ethernet.py	2019-11-19 17:51:57.074058002 -0800
++++ ethernet_new.py	2019-11-19 17:51:44.542058002 -0800
+@@ -66,6 +66,8 @@
+   SCSI_TYPE  = 0x889a
+   ATA_TYPE   = 0x88a2
+   QINQ_TYPE  = 0x9100
++  CP_TYPE    = 0x99cc
++  CAM_TYPE   = 0x999e
+ 
+   INVALID_TYPE = 0xffff
+ 
