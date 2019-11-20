@@ -1,0 +1,8 @@
+Start IP routing controller program:
+./pox.py log.level --DEBUG misc.ip_routing
+
+Create the `mytopo` topology with 10Mbps link bandwidth and 10ms delay:
+sudo mn --custom mytopo.py --topo mytopo --mac --controller remote --switch ovsk --link tc,bw=10,delay=10ms
+
+Destroy the topology:
+sudo mn -c
