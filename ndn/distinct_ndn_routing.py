@@ -14,7 +14,7 @@ log = core.getLogger()
 
 """
 Distinct NDN routing (distinct control planes):
-1. if don't know how to route, cache packet and wait for CAM.
+1. if don't know how to route, cache packet in CPQ and wait for CAM.
 2. receive periodic advertisements (CAMs) from neighboring routers to know how
    to route.
 
@@ -82,6 +82,9 @@ class DistinctNDNRouting (NDNRouting):
           dpid=dpid, udp_pkt=udp_resp, dst_ip=self.router[dpid].local_host_ip,
           out_port=LOCAL_HOST_OUT_PORT,
         )
+      # TODO check if request for content exists in crt.
+      #      If it does, don't need to send a new CP.
+      #      Did not work when tried to implement in distinct NDN routing.
       else:
         out_port = self.get_content_loc(dpid, content)
         # add request for content to local CRT
@@ -108,6 +111,9 @@ class DistinctNDNRouting (NDNRouting):
           src_mac=self.port_to_mac(packet_in.in_port),
         )
         self.send_packet(content_pkt.pack(), packet_in.in_port)
+      # TODO check if request for content exists in crt or local_host_crt.
+      #      If it does, don't need to send a new CP.
+      #      Did not work when tried to implement in distinct NDN routing.
       else:
         out_port = self.get_content_loc(dpid, content)
         # add request for content to CRT
